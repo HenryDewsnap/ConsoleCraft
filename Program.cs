@@ -82,9 +82,7 @@ namespace Game
 			ConsoleKeyInfo Input;
 
 			while (Global.Run)
-			{
-				
-					
+			{	
 				while (!Console.KeyAvailable)
 				{
 					Gravity();
@@ -262,12 +260,17 @@ namespace Game
 			{
 				switch (Console.ReadKey(true).Key)
 				{
+					//PLAYER X COORD MANAGER
+
 					case ConsoleKey.LeftArrow:
 						if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint - 1,Global.PlayerY]) == true)
 						{
 							if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint - 1,Global.PlayerY-1]) == false)
 							{
-								Global.PlayerX -= 1;
+								if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1]) == false)
+								{
+									Global.PlayerX -= 1;	
+								}
 							}
 							return;
 						}
@@ -279,12 +282,16 @@ namespace Game
 						{
 							if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint + 1,Global.PlayerY-1]) == false)
 							{
-								Global.PlayerX += 1;
+								if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1]) == false)
+								{
+									Global.PlayerX += 1;	
+								}
 							}
 							return;
 						}
 						Global.PlayerX += 1;
 						return;
+
 
 					case ConsoleKey.W:
 						BlockDestroy("w");
@@ -301,8 +308,16 @@ namespace Game
 					case ConsoleKey.D:
 						BlockDestroy("d");
 						return;
-				}	
-			}
+
+					case ConsoleKey.Q:
+						BlockDestroy("q");
+						return;
+						
+					case ConsoleKey.E:
+						BlockDestroy("e");
+						return;
+				}
+			}	
 		}
 
 
@@ -311,29 +326,18 @@ namespace Game
 		{
 			try
 			{
-				if (Global.PlayerY <= 2)
-				{
-					return;
-				}
-				if (Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1] == 5)
-				{
-					Global.PlayerY += 1;
-					return;
-				}
 
-				if (Global.MapData[Global.PlayerX+Global.MidPoint, Global.PlayerY] != 0)
+				if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint, Global.PlayerY]) == true)
 				{
-					if (Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY] == 5)
-					{
-						return;
-					}
 					Global.PlayerY -= 1;
 				}
 
-				if (Global.MapData[Global.PlayerX+Global.MidPoint, Global.PlayerY+1] == 0)
+
+				if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint, Global.PlayerY+1]) == false)
 				{
 					Global.PlayerY += 1;	
 				}
+
 			}
 			catch
 			{
@@ -366,6 +370,8 @@ namespace Game
 					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1], 1);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1] = 0;
+
+					WaterFill(Global.PlayerX+Global.MidPoint,Global.PlayerY+1);
 					
 					return;
 				case "w":
@@ -379,6 +385,8 @@ namespace Game
 
 					Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1] = 0;
 					
+					WaterFill(Global.PlayerX+Global.MidPoint,Global.PlayerY-1);
+
 					return;
 				case "a":
 
@@ -391,6 +399,8 @@ namespace Game
 
 					Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY] = 0;
 					
+					WaterFill(Global.PlayerX+Global.MidPoint-1,Global.PlayerY);
+
 					return;
 				case "d":
 
@@ -402,7 +412,37 @@ namespace Game
 					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY], 1);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY] = 0;
+
+					WaterFill(Global.PlayerX+Global.MidPoint+1,Global.PlayerY);
 					
+					return;
+				case "q":
+
+					if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1]) == false)
+					{
+						break;
+					}
+
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1], 1);
+
+					Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1] = 0;
+
+					WaterFill(Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1);
+
+					return;
+				case "e":
+
+					if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1]) == false)
+					{
+						break;
+					}
+
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1], 1);
+
+					Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1] = 0;
+
+					WaterFill(Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1);
+
 					return;
 			}
 		}
@@ -448,6 +488,26 @@ namespace Game
 				return true;
 			}
 		}
+		
+		public static void WaterFill(int BrokenBlockX, int BrokenBlockY)
+		{
+			try
+			{
+				for (int x = -1; x <= 1; x++)
+				{
+					for (int y = 0; y <= 1; y++)
+					{
+						if (Global.MapData[BrokenBlockX-x, BrokenBlockY-y] == 5)
+						{
+							Global.MapData[BrokenBlockX,BrokenBlockY] = 5;
+						}
+					}
+				}
+			}
+			catch
+			{
+				return;
+			}
+		}
 	}
 }
-
