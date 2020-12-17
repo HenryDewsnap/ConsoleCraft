@@ -94,7 +94,8 @@ namespace Game
 					Thread.Sleep(Global.FrameDelay);
 				}
 				UserInput();
-				Gravity();	
+				
+				
 			}
 		}
 
@@ -198,7 +199,8 @@ namespace Game
 					{
 						Height -= 1;
 					}
-					if (Height <= MinHeight){
+					if (Height <= MinHeight)
+					{
 						Height += 1;
 					}
 					else{
@@ -224,7 +226,8 @@ namespace Game
 								{
 									Global.MapData[x, y] = 4; //ore
 								}
-								else{
+								else
+								{
 									Global.MapData[x, y] = 3; //stone
 								}
 							}
@@ -260,21 +263,41 @@ namespace Game
 				switch (Console.ReadKey(true).Key)
 				{
 					case ConsoleKey.LeftArrow:
+						if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint - 1,Global.PlayerY]) == true)
+						{
+							if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint - 1,Global.PlayerY-1]) == false)
+							{
+								Global.PlayerX -= 1;
+							}
+							return;
+						}
 						Global.PlayerX -= 1;
 						return;
+
 					case ConsoleKey.RightArrow:
+						if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint + 1,Global.PlayerY]) == true)
+						{
+							if (IsSolid(Global.MapData[Global.PlayerX+Global.MidPoint + 1,Global.PlayerY-1]) == false)
+							{
+								Global.PlayerX += 1;
+							}
+							return;
+						}
 						Global.PlayerX += 1;
 						return;
 
 					case ConsoleKey.W:
 						BlockDestroy("w");
 						return;
+
 					case ConsoleKey.A:
 						BlockDestroy("a");
 						return;
+
 					case ConsoleKey.S:
 						BlockDestroy("s");
 						return;
+
 					case ConsoleKey.D:
 						BlockDestroy("d");
 						return;
