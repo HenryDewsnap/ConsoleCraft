@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+						
+
 
 namespace ConsoleCraft
 {
@@ -24,6 +26,8 @@ namespace ConsoleCraft
 		public static int [,] MapData = new int [MapSize * Width, MapSize];
 
 		//Functions And Game Rules
+		public static string [] ItemNames = {"Empty", "Grass", "Dirt", "Stone", "Ore", "water", "wood", "leaves"};
+		public static int LargestItemLength = 6;
 		public static bool Run = true;
 		public static Random rnd = new Random();//Use Case = Global.rnd.Next(1,10);
 
@@ -32,7 +36,7 @@ namespace ConsoleCraft
 		public static string [] DataName = {"Health", "Hunger", "Thirst", "Oxygen"};
 		public static int [] PlayerData = {10, 10, 10, 10};
 		public static int [] InventoryName = new int [InventorySize];
-		public static int [] InventoryCount = new int [InventorySize]; 
+		public static int [] InventoryCount = new int [InventorySize];
 		public static int PlayerX = (MapSize * Width) / 2;
 		public static int PlayerY = 4;
 		public static int Health = 10;
@@ -51,9 +55,13 @@ namespace ConsoleCraft
 
 			Thread DLoop = new Thread(new ThreadStart(DisplayLoop));
 
+			Thread WLoop = new Thread(new ThreadStart(WaterLoop));
+
 			GLoop.Start();//Starts The Game Loop
 
 			DLoop.Start();//Starts the Display Loop
+
+			WLoop.Start();//Starts The Water Fill Thread
 
 		}
 
@@ -74,6 +82,14 @@ namespace ConsoleCraft
 				}
 				GameChecks.Gravity();
 				
+			}
+		}
+
+		public static void WaterLoop()
+		{
+			while (Global.Run)
+			{
+				GameChecks.WaterFill();
 			}
 		}
 
@@ -221,11 +237,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY+1] = 0;
-
-					WaterFill(Global.PlayerX+Global.MidPoint,Global.PlayerY+1);
 					
 					return;
 				case "w":
@@ -235,11 +249,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint,Global.PlayerY-1] = 0;
-					
-					WaterFill(Global.PlayerX+Global.MidPoint,Global.PlayerY-1);
 
 					return;
 				case "a":
@@ -249,11 +261,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY] = 0;
-					
-					WaterFill(Global.PlayerX+Global.MidPoint-1,Global.PlayerY);
 
 					return;
 				case "d":
@@ -263,11 +273,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY] = 0;
-
-					WaterFill(Global.PlayerX+Global.MidPoint+1,Global.PlayerY);
 					
 					return;
 				case "q":
@@ -277,11 +285,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1] = 0;
-
-					WaterFill(Global.PlayerX+Global.MidPoint-1,Global.PlayerY-1);
 
 					return;
 				case "e":
@@ -291,11 +297,9 @@ namespace ConsoleCraft
 						break;
 					}
 
-					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1], 1);
+					InventoryManager(Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1]);
 
 					Global.MapData[Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1] = 0;
-
-					WaterFill(Global.PlayerX+Global.MidPoint+1,Global.PlayerY-1);
 
 					return;
 			}
@@ -304,7 +308,7 @@ namespace ConsoleCraft
 
 
 
-		public static void InventoryManager(int Item, int Ammount)
+		public static void InventoryManager(int Item)
 		{
 			if (IsSolid(Item) == false)
 			{
@@ -315,7 +319,7 @@ namespace ConsoleCraft
 			{
 				if (Global.InventoryName[i] == Item)
 				{
-					Global.InventoryCount[i] += Ammount;
+					Global.InventoryCount[i] += 1;
 					return;
 				}
 			}
@@ -324,7 +328,7 @@ namespace ConsoleCraft
 				if (Global.InventoryName[i] == 0)
 				{
 					Global.InventoryName[i] = Item;
-					Global.InventoryCount[i] = Ammount;
+					Global.InventoryCount[i] = 1;
 					return;
 				}
 			}
@@ -357,24 +361,36 @@ namespace ConsoleCraft
 
 
 
-		public static void WaterFill(int BlockX, int BlockY)
+		public static void WaterFill()
 		{
-			try
+			for (int BlockX = 0; BlockX < Global.MapSize; BlockX++)
 			{
-				for (int x = -1; x <= 1; x++)
+				for (int BlockY = 0; BlockY < Global.MapSize; BlockY++)
 				{
-					for (int y = -1; y <= 0; y++)
-					{
-						if (Global.MapData[BlockX+x, BlockY+y] == 5)
+				
+					for (int x = -1; x <= 1; x++)
 						{
-							Global.MapData[BlockX,BlockY] = 5;
+						for (int y = -1; y <= 0; y++)
+						{
+							try
+							{
+								if (Global.MapData[BlockX+x+Global.PlayerX, BlockY+y] == 5)
+								{
+									if (IsSolid(Global.MapData[BlockX+Global.PlayerX,BlockY]) == false)
+									{
+										Global.MapData[BlockX+Global.PlayerX,BlockY] = 5;
+									}
+								}
+
+							}
+							catch
+							{
+								break;
+							}
 						}
 					}
+					
 				}
-			}
-			catch
-			{
-				return;
 			}
 		}
 	}
@@ -481,7 +497,15 @@ namespace ConsoleCraft
 			Console.WriteLine("\nInventory:");
 			for (int i=0;i<Global.InventoryName.Length;i++)
 			{
-				Console.Write($" - Slot {i+1} - Item: {Global.InventoryName[i]} - Ammount: {Global.InventoryCount[i]}\n");
+				int ItemNumber = Global.InventoryName[i];
+				Console.Write($" - Slot {i+1} - Item: {Global.ItemNames[ItemNumber]}");
+				for (int a = 0; a < Global.LargestItemLength-Global.ItemNames[ItemNumber].Length; a++)
+				{
+					Console.Write(" ");
+				}
+
+
+				Console.Write($" - Ammount: {Global.InventoryCount[i]}\n");
 			}
 		}
 	}
